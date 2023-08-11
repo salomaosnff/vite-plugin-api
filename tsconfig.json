@@ -1,8 +1,13 @@
 {
     "compilerOptions": {
+        "target": "ES6",
         "lib": ["es2022"],
         "downlevelIteration": true,
-        "moduleResolution": "Node"
+        "moduleResolution": "Node",
+        "types": [
+            "openapi-types"
+        ]
     },
-    "exclude": ["example"]
+    "include": ["src"],
+    "exclude": ["example", "dist", "node_modules/**/*"]
 }

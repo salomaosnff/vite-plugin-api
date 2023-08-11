@@ -1,5 +1,5 @@
-import { OpenAPIV3 } from "openapi-types";
-import { ApiDocs, ApiDocsParser, Operation, OperationBody, OperationParameter, OperationResponse, Service } from "../types";
+import type { OpenAPIV3 } from "openapi-types";
+import type { ApiDocs, ApiDocsParser, Operation, OperationBody, OperationParameter, OperationResponse, Service } from "../types";
 import { camelCase, pascalCase } from 'change-case'
 import { randomUUID } from "crypto";
 

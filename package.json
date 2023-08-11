@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "Transform APIs spec to a TypeScript client",
   "author": "Salomão Neto <salomaosnff@yahoo.com>",
-  "type": "module",
   "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",

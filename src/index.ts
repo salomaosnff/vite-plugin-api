@@ -42,7 +42,7 @@ export function SwaggerApi(apis: SwaggerApiDict): Plugin {
             types += `declare module 'virtual:swagger/core' {\n`
             types += `  export interface ApiRequest {\n`
             types += `    url: URL;\n`
-            types += `    method: string;\n`
+            types += `    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';\n`
             types += `    body?: any;\n`
             types += `  }\n`
             types += `  export interface ApiResponse<T> {\n`
@@ -104,3 +104,8 @@ export function SwaggerApi(apis: SwaggerApiDict): Plugin {
         },
     }
 }
+
+export * from './types'
+export * from './generators/openapi3'
+export * from './renderers/dts'
+export * from './renderers/js'

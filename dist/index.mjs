@@ -474,4 +474,4 @@ function SwaggerApi(apis) {
   };
 }
 
-export { SwaggerApi };
+export { DtsRenderer, JsRenderer, OpenAPIV3Parser, SwaggerApi, getServiceBaseUrl, operationNameByPathAndMethod };
