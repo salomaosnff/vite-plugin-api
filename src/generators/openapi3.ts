@@ -35,6 +35,7 @@ function parseSchema(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)
 
 export interface OpenAPIV3GeneratorOptions {
     swaggerBaseUrl?: string;
+    apiBaseUrl?: string;
     getOperationName?(path: string, method: string, operation: Operation): string;
     getServiceName?(path: string, method: string, operation: OpenAPIV3.OperationObject): string;
 }
@@ -194,7 +195,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
 
                 const service = serviceMap.get(serviceName) ?? {
                     name: serviceName,
-                    baseUrl: '',
+                    baseUrl: this.options.apiBaseUrl ?? this.options.swaggerBaseUrl ?? '',
                     operations: {}
                 }
 

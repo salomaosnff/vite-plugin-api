@@ -412,7 +412,7 @@ function SwaggerApi(apis) {
 `;
       types += `    url: URL;
 `;
-      types += `    method: string;
+      types += `    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 `;
       types += `    body?: any;
 `;
