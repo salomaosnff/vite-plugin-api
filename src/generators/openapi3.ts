@@ -218,14 +218,13 @@ export class OpenAPIV3Parser implements ApiDocsParser {
         }
 
         for (const service of serviceMap.values()) {
-            service.baseUrl = (this.options.apiBaseUrl ?? this.options.swaggerBaseUrl ?? '').replace(/\/+$/, '') + getServiceBaseUrl(service)
-
+            service.baseUrl = getServiceBaseUrl(service)
             for (const operation of Object.values(service.operations)) {
-
+                
                 if (operation.path === service.baseUrl || operation.path.startsWith(service.baseUrl + '/')) {
                     operation.path = operation.path.slice(service.baseUrl.length)
                 }
-
+                
                 const operationId = operation.name.startsWith('\0') ? this.getOperationName(operation.path, operation.method, operation) : operation.name
 
                 if (operation.name !== operationId) {
@@ -234,6 +233,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
                     service.operations[operationId] = operation
                 }
             }
+            service.baseUrl = (this.options.apiBaseUrl ?? this.options.swaggerBaseUrl ?? '').replace(/\/+$/, '') + service.baseUrl
             docs.services.push(service)
         }
 
