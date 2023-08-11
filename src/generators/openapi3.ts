@@ -195,7 +195,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
 
                 const service = serviceMap.get(serviceName) ?? {
                     name: serviceName,
-                    baseUrl: this.options.apiBaseUrl ?? this.options.swaggerBaseUrl ?? '',
+                    baseUrl: '',
                     operations: {}
                 }
 
@@ -218,7 +218,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
         }
 
         for (const service of serviceMap.values()) {
-            service.baseUrl = getServiceBaseUrl(service)
+            service.baseUrl = (this.options.apiBaseUrl ?? this.options.swaggerBaseUrl ?? '').replace(/\/+$/, '') + getServiceBaseUrl(service)
 
             for (const operation of Object.values(service.operations)) {
 
