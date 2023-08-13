@@ -1,7 +1,6 @@
 import type { OpenAPIV3 } from "openapi-types";
 import type { ApiDocs, ApiDocsParser, Operation, OperationBody, OperationParameter, OperationResponse, Service } from "../types";
 import { camelCase, pascalCase } from 'change-case'
-import { randomUUID } from "crypto";
 
 function parseSchema(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) {

@@ -50,8 +50,11 @@ export class DtsRenderer implements ApiDocsRenderer {
                                     writer.writeLine(` * ${operation.description}`)
                                     writer.writeLine(` *`);
                                 }
-                                writer.writeLine(` * @endpoint ${service.baseUrl}${operation.path}`);
-                                writer.writeLine(` * @method ${operation.method}`);
+                                writer.writeLine(` * @endpoint ${operation.method} ${service.baseUrl}${operation.path}`);
+                                
+                                if (body?.contentType) {
+                                    writer.writeLine(` * @contentType ${body.contentType}`)
+                                }
 
                                 if (operation.see?.length) {
                                     writer.writeLine(` *`);
@@ -61,7 +64,7 @@ export class DtsRenderer implements ApiDocsRenderer {
                                 }
 
                                 for (const response of operation.responses) {
-                                    writer.writeLine(` * @returns {${response.type}} ${response.status} ${response.description}`);
+                                    writer.writeLine(` * @returns ${response.status} ${response.description}`);
                                 }
                                 writer.writeLine(` */`);
                                 writer.write(`${operation.id}(`, true);
