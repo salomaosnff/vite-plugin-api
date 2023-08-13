@@ -27,8 +27,8 @@ export class JsRenderer implements ApiDocsRenderer {
                     })
                     writer.writeLine(`}`);
 
-                    for (const [name, operation] of Object.entries(service.operations)) {
-                        writer.write(`${name}(`, true);
+                    for (const operation of service.operations) {
+                        writer.write(`${operation.id}(`, true);
 
                         let hasPrevParam = false;
 

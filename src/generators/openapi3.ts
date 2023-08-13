@@ -72,7 +72,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
     }
 
     getOperationName(operation: Operation): string {
-        return this.options.getOperationName?.(operation) ?? operation.id ? camelCase(operation.id) : operationNameByPathAndMethod(operation.path, operation.method)
+        return this.options.getOperationName?.(operation) ?? (operation.id ? camelCase(operation.id) : operationNameByPathAndMethod(operation.path, operation.method))
     }
 
     parseParameter(param: OpenAPIV3.ParameterObject): OperationParameter {
@@ -195,13 +195,13 @@ export class OpenAPIV3Parser implements ApiDocsParser {
                 const service = serviceMap.get(serviceName) ?? {
                     name: serviceName,
                     baseUrl: '',
-                    operations: {}
+                    operations: []
                 }
 
                 const { body, responses, parameters, queryParameters } = this.parseOperation(operation)
 
-                service.operations[randomUUID()] = {
-                    id: '',
+                service.operations.push({
+                    id: operation.operationId ?? null,
                     description: operation.description,
                     body,
                     method: method.toUpperCase(),
@@ -210,7 +210,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
                     queryParameters,
                     responses,
                     see: operation.operationId && this.options.swaggerBaseUrl ? operation.tags.map(tag => `${this.options.swaggerBaseUrl}#/${tag}/${operation.operationId}`) : [],
-                }
+                })
 
                 serviceMap.set(serviceName, service)
             }
@@ -218,17 +218,17 @@ export class OpenAPIV3Parser implements ApiDocsParser {
 
         for (const service of serviceMap.values()) {
             service.baseUrl = getServiceBaseUrl(service)
-            for (const operation of Object.values(service.operations)) {
+
+            for (const operation of service.operations) {
                 
                 if (operation.path === service.baseUrl || operation.path.startsWith(service.baseUrl + '/')) {
                     operation.path = operation.path.slice(service.baseUrl.length)
                 }
-                
-                const operationId = this.getOperationName(operation)
 
-                delete service.operations[operation.id]
-                operation.id = operationId
-                service.operations[operationId] = operation
+
+                operation.id = this.getOperationName(operation)
+                service.operations[operation.id] = operation
+
             }
             service.baseUrl = (this.options.apiBaseUrl ?? this.options.swaggerBaseUrl ?? '').replace(/\/+$/, '') + service.baseUrl
             docs.services.push(service)

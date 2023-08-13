@@ -35,7 +35,7 @@ export interface Operation {
 export interface Service {
     name: string;
     baseUrl: string;
-    operations: Record<string, Operation>;
+    operations: Operation[];
 }
 
 export interface ApiDocs {
