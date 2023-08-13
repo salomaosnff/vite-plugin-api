@@ -72,7 +72,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
     }
 
     getOperationName(path: string, method: string, operation: Operation): string {
-        return this.options.getOperationName?.(path, method, operation) || operationNameByPathAndMethod(path, method) || `${method}${path.replace(/\//g, '_')}`
+        return this.options.getOperationName?.(path, method, operation) || operation.name ? camelCase(operation.name) : operationNameByPathAndMethod(path, method)
     }
 
     parseParameter(param: OpenAPIV3.ParameterObject): OperationParameter {
