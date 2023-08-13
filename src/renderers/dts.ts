@@ -40,7 +40,7 @@ export class DtsRenderer implements ApiDocsRenderer {
                     writer.writeLine(`export class ${service.name} {`);
                     writer.indent(() => {
                         writer.writeLine(`constructor(handler: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);`);
-                        for (const [name, operation] of Object.entries(service.operations)) {
+                        for (const operation of service.operations) {
                             const params = this.renderOperationParams(operation.parameters);
                             const query = this.renderOperationParams(operation.queryParameters);
 
@@ -64,7 +64,7 @@ export class DtsRenderer implements ApiDocsRenderer {
                                     writer.writeLine(` * @returns {${response.type}} ${response.status} ${response.description}`);
                                 }
                                 writer.writeLine(` */`);
-                                writer.write(`${name}(`, true);
+                                writer.write(`${operation.id}(`, true);
 
                                 let hasPrevParam = false;
 
