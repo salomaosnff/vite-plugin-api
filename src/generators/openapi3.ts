@@ -141,6 +141,17 @@ export class OpenAPIV3Parser implements ApiDocsParser {
         const responsed = new Set<string>()
 
         for (const [code, response] of Object.entries(responses) as [string, OpenAPIV3.ResponseObject][]) {
+            if(!response.content) {
+                const id = genResponseId(parseInt(code), 'void')
+                if (responsed.has(id)) continue
+                bodies.push({
+                    status: parseInt(code),
+                    contentType: '',
+                    type: 'void',
+                    description: response.description,
+                })
+                continue
+            }
             for (const [contentType, content] of Object.entries((response).content || {})) {
                 const status = parseInt(code)
                 const type = parseSchema(content.schema)
