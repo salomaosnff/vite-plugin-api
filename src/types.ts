@@ -21,7 +21,7 @@ export interface OperationParameter {
 }
 
 export interface Operation {
-    name: string;
+    id: string;
     path: string;
     method: string;
     description?: string;

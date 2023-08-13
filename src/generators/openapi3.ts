@@ -36,7 +36,7 @@ function parseSchema(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)
 export interface OpenAPIV3GeneratorOptions {
     swaggerBaseUrl?: string;
     apiBaseUrl?: string;
-    getOperationName?(path: string, method: string, operation: Operation): string;
+    getOperationName?(operation: Operation): string;
     getServiceName?(path: string, method: string, operation: OpenAPIV3.OperationObject): string;
 }
 
@@ -71,8 +71,8 @@ export class OpenAPIV3Parser implements ApiDocsParser {
         return this.options.getServiceName?.(path, method, operation) || pascalCase(operation.tags?.[0]) || 'ApiService'
     }
 
-    getOperationName(path: string, method: string, operation: Operation): string {
-        return this.options.getOperationName?.(path, method, operation) || operation.name ? camelCase(operation.name) : operationNameByPathAndMethod(path, method)
+    getOperationName(operation: Operation): string {
+        return this.options.getOperationName?.(operation) ?? operation.id ? camelCase(operation.id) : operationNameByPathAndMethod(operation.path, operation.method)
     }
 
     parseParameter(param: OpenAPIV3.ParameterObject): OperationParameter {
@@ -190,7 +190,6 @@ export class OpenAPIV3Parser implements ApiDocsParser {
             for (const [method, operation] of Object.entries(pathItem as {
                 [method in OpenAPIV3.HttpMethods]?: OpenAPIV3.OperationObject;
             })) {
-                const operationId = operation.operationId ?? `\0${randomUUID()}`
                 const serviceName = this.getServiceName(path, method, operation)
 
                 const service = serviceMap.get(serviceName) ?? {
@@ -201,8 +200,8 @@ export class OpenAPIV3Parser implements ApiDocsParser {
 
                 const { body, responses, parameters, queryParameters } = this.parseOperation(operation)
 
-                service.operations[operationId] = {
-                    name: operationId,
+                service.operations[randomUUID()] = {
+                    id: '',
                     description: operation.description,
                     body,
                     method: method.toUpperCase(),
@@ -225,13 +224,11 @@ export class OpenAPIV3Parser implements ApiDocsParser {
                     operation.path = operation.path.slice(service.baseUrl.length)
                 }
                 
-                const operationId = camelCase(operation.name.startsWith('\0') ? this.getOperationName(operation.path, operation.method, operation) : operation.name)
+                const operationId = this.getOperationName(operation)
 
-                if (operation.name !== operationId) {
-                    delete service.operations[operation.name]
-                    operation.name = operationId
-                    service.operations[operationId] = operation
-                }
+                delete service.operations[operation.id]
+                operation.id = operationId
+                service.operations[operationId] = operation
             }
             service.baseUrl = (this.options.apiBaseUrl ?? this.options.swaggerBaseUrl ?? '').replace(/\/+$/, '') + service.baseUrl
             docs.services.push(service)
