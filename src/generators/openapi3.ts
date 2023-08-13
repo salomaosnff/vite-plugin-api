@@ -134,17 +134,28 @@ export class OpenAPIV3Parser implements ApiDocsParser {
     parseResponses(responses: OpenAPIV3.ResponsesObject): OperationResponse[] {
         const bodies: OperationResponse[] = []
 
+        function genResponseId(code: number, type: string) {
+            return `${code}_${type}`
+        }
+
+        const responsed = new Set<string>()
+
         for (const [code, response] of Object.entries(responses) as [string, OpenAPIV3.ResponseObject][]) {
             for (const [contentType, content] of Object.entries((response).content || {})) {
-                if (contentType.includes('json')) {
-                    bodies.push({
-                        status: parseInt(code),
-                        contentType,
-                        type: parseSchema(content.schema),
-                        description: response.description,
-                    })
-                    break
-                }
+                const status = parseInt(code)
+                const type = parseSchema(content.schema)
+                const id = genResponseId(status, type)
+
+                if (responsed.has(id)) continue
+
+                bodies.push({
+                    status,
+                    contentType,
+                    type,
+                    description: response.description,
+                })
+                
+                responsed.add(id)
             }
         }
 
@@ -220,7 +231,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
             service.baseUrl = getServiceBaseUrl(service)
 
             for (const operation of service.operations) {
-                
+
                 if (operation.path === service.baseUrl || operation.path.startsWith(service.baseUrl + '/')) {
                     operation.path = operation.path.slice(service.baseUrl.length)
                 }
