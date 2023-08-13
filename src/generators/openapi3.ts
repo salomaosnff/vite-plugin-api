@@ -190,7 +190,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
             for (const [method, operation] of Object.entries(pathItem as {
                 [method in OpenAPIV3.HttpMethods]?: OpenAPIV3.OperationObject;
             })) {
-                const operationId = operation.operationId ?? '\0' + randomUUID()
+                const operationId = operation.operationId ?? `\0${randomUUID()}`
                 const serviceName = this.getServiceName(path, method, operation)
 
                 const service = serviceMap.get(serviceName) ?? {
@@ -225,7 +225,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
                     operation.path = operation.path.slice(service.baseUrl.length)
                 }
                 
-                const operationId = operation.name.startsWith('\0') ? this.getOperationName(operation.path, operation.method, operation) : operation.name
+                const operationId = camelCase(operation.name.startsWith('\0') ? this.getOperationName(operation.path, operation.method, operation) : operation.name)
 
                 if (operation.name !== operationId) {
                     delete service.operations[operation.name]
