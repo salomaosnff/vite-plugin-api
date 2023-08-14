@@ -2,7 +2,6 @@ import axios from 'axios';
 import { writeFile, readFile } from 'fs/promises';
 import * as prettier from 'prettier';
 import { pascalCase, camelCase } from 'change-case';
-import { randomUUID } from 'crypto';
 
 function createWritter() {
   let result = "";
@@ -72,7 +71,7 @@ class DtsRenderer {
           writer.writeLine(`export class ${service.name} {`);
           writer.indent(() => {
             writer.writeLine(`constructor(handler: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);`);
-            for (const [name, operation] of Object.entries(service.operations)) {
+            for (const operation of service.operations) {
               const params = this.renderOperationParams(operation.parameters);
               const query = this.renderOperationParams(operation.queryParameters);
               const renderOverload = (body) => {
@@ -81,8 +80,10 @@ class DtsRenderer {
                   writer.writeLine(` * ${operation.description}`);
                   writer.writeLine(` *`);
                 }
-                writer.writeLine(` * @endpoint ${service.baseUrl}${operation.path}`);
-                writer.writeLine(` * @method ${operation.method}`);
+                writer.writeLine(` * @endpoint ${operation.method} ${service.baseUrl}${operation.path}`);
+                if (body?.contentType) {
+                  writer.writeLine(` * @contentType ${body.contentType}`);
+                }
                 if (operation.see?.length) {
                   writer.writeLine(` *`);
                   for (const see of operation.see) {
@@ -90,10 +91,10 @@ class DtsRenderer {
                   }
                 }
                 for (const response of operation.responses) {
-                  writer.writeLine(` * @returns {${response.type}} ${response.status} ${response.description}`);
+                  writer.writeLine(` * @returns ${response.status} ${response.description}`);
                 }
                 writer.writeLine(` */`);
-                writer.write(`${name}(`, true);
+                writer.write(`${operation.id}(`, true);
                 let hasPrevParam = false;
                 if (params) {
                   writer.write(`params: ${params}`);
@@ -180,8 +181,8 @@ class OpenAPIV3Parser {
   getServiceName(path, method, operation) {
     return this.options.getServiceName?.(path, method, operation) || pascalCase(operation.tags?.[0]) || "ApiService";
   }
-  getOperationName(path, method, operation) {
-    return this.options.getOperationName?.(path, method, operation) || operationNameByPathAndMethod(path, method) || `${method}${path.replace(/\//g, "_")}`;
+  getOperationName(operation) {
+    return this.options.getOperationName?.(operation) ?? (operation.id ? camelCase(operation.id) : operationNameByPathAndMethod(operation.path, operation.method));
   }
   parseParameter(param) {
     return {
@@ -231,17 +232,36 @@ class OpenAPIV3Parser {
   }
   parseResponses(responses) {
     const bodies = [];
+    function genResponseId(code, type) {
+      return `${code}_${type}`;
+    }
+    const responsed = /* @__PURE__ */ new Set();
     for (const [code, response] of Object.entries(responses)) {
+      if (!response.content) {
+        const id = genResponseId(parseInt(code), "void");
+        if (responsed.has(id))
+          continue;
+        bodies.push({
+          status: parseInt(code),
+          contentType: "",
+          type: "void",
+          description: response.description
+        });
+        continue;
+      }
       for (const [contentType, content] of Object.entries(response.content || {})) {
-        if (contentType.includes("json")) {
-          bodies.push({
-            status: parseInt(code),
-            contentType,
-            type: parseSchema(content.schema),
-            description: response.description
-          });
-          break;
-        }
+        const status = parseInt(code);
+        const type = parseSchema(content.schema);
+        const id = genResponseId(status, type);
+        if (responsed.has(id))
+          continue;
+        bodies.push({
+          status,
+          contentType,
+          type,
+          description: response.description
+        });
+        responsed.add(id);
       }
     }
     return bodies;
@@ -276,16 +296,15 @@ class OpenAPIV3Parser {
     }
     for (const [path, pathItem] of Object.entries(input.paths)) {
       for (const [method, operation] of Object.entries(pathItem)) {
-        const operationId = operation.operationId ?? "\0" + randomUUID();
         const serviceName = this.getServiceName(path, method, operation);
         const service = serviceMap.get(serviceName) ?? {
           name: serviceName,
           baseUrl: "",
-          operations: {}
+          operations: []
         };
         const { body, responses, parameters, queryParameters } = this.parseOperation(operation);
-        service.operations[operationId] = {
-          name: operationId,
+        service.operations.push({
+          id: operation.operationId ?? null,
           description: operation.description,
           body,
           method: method.toUpperCase(),
@@ -294,23 +313,20 @@ class OpenAPIV3Parser {
           queryParameters,
           responses,
           see: operation.operationId && this.options.swaggerBaseUrl ? operation.tags.map((tag) => `${this.options.swaggerBaseUrl}#/${tag}/${operation.operationId}`) : []
-        };
+        });
         serviceMap.set(serviceName, service);
       }
     }
     for (const service of serviceMap.values()) {
       service.baseUrl = getServiceBaseUrl(service);
-      for (const operation of Object.values(service.operations)) {
+      for (const operation of service.operations) {
         if (operation.path === service.baseUrl || operation.path.startsWith(service.baseUrl + "/")) {
           operation.path = operation.path.slice(service.baseUrl.length);
         }
-        const operationId = operation.name.startsWith("\0") ? this.getOperationName(operation.path, operation.method, operation) : operation.name;
-        if (operation.name !== operationId) {
-          delete service.operations[operation.name];
-          operation.name = operationId;
-          service.operations[operationId] = operation;
-        }
+        operation.id = this.getOperationName(operation);
+        service.operations[operation.id] = operation;
       }
+      service.baseUrl = (this.options.apiBaseUrl ?? this.options.swaggerBaseUrl ?? "").replace(/\/+$/, "") + service.baseUrl;
       docs.services.push(service);
     }
     return docs;
@@ -321,11 +337,47 @@ class JsRenderer {
   constructor() {
     this._indentation = 0;
   }
+  getHeaders(operation) {
+  }
   async render(api) {
     const writer = createWritter();
-    writer.writeLine(`function toUrl(base, path = '', params = {}) {`);
+    writer.writeLine(`function joinUrl(base, path = '') {`);
     writer.indent(() => {
-      writer.writeLine(`return new URL(path.replace(/^\\/\\/+/, '').replaceAll(/\\{(.+?)\\}/g, (_, p) => encodeURIComponent(params[p])), base)`);
+      writer.writeLine(`return new URL(path.replace(/^\\/\\/+/, ''), base)`);
+    });
+    writer.writeLine(`}`);
+    writer.break();
+    writer.writeLine(`function accept(body, contentTypes) {`);
+    writer.indent(() => {
+      writer.writeLine(`const headers = new Headers();`);
+      writer.break();
+      writer.writeLine(`for (const contentType of contentTypes) {`);
+      writer.indent(() => {
+        writer.writeLine(`if (contentType.includes('json') && typeof body === 'object') {`);
+        writer.indent(() => {
+          writer.writeLine(`body = JSON.stringify(body);`);
+          writer.writeLine(`headers.set('Content-Type', contentType);`);
+          writer.writeLine(`return { body, headers };`);
+        });
+        writer.writeLine(`}`);
+        writer.break();
+        writer.writeLine(`if (contentType === 'multipart/form-data' && body instanceof FormData) {`);
+        writer.indent(() => {
+          writer.writeLine(`headers.set('Content-Type', contentType);`);
+          writer.writeLine(`return { body, headers };`);
+        });
+        writer.writeLine(`}`);
+        writer.break();
+        writer.writeLine(`if (contentType === 'application/x-www-form-urlencoded' && body instanceof URLSearchParams) {`);
+        writer.indent(() => {
+          writer.writeLine(`body = body.toString();`);
+          writer.writeLine(`headers.set('Content-Type', contentType);`);
+          writer.writeLine(`return { body, headers };`);
+        });
+        writer.writeLine(`}`);
+      });
+      writer.writeLine(`}`);
+      writer.writeLine(`return { body, headers };`);
     });
     writer.writeLine(`}`);
     writer.break();
@@ -340,8 +392,9 @@ class JsRenderer {
             writer.writeLine(`this.baseUrl = '${service.baseUrl}';`);
           });
           writer.writeLine(`}`);
-          for (const [name, operation] of Object.entries(service.operations)) {
-            writer.write(`${name}(`, true);
+          writer.break();
+          for (const operation of service.operations) {
+            writer.write(`${operation.id}(`, true);
             let hasPrevParam = false;
             if (operation.parameters.length) {
               writer.write(`params`);
@@ -357,16 +410,23 @@ class JsRenderer {
               if (hasPrevParam) {
                 writer.write(", ");
               }
-              writer.write(`body`);
+              writer.write(`data`);
             }
             writer.write(`) {`);
             writer.break();
             writer.indent(() => {
-              writer.writeLine(`const url = toUrl(this.baseUrl${operation.path ? `, '${operation.path}'` : ""}${operation.parameters?.length ? ", params" : ""});`);
+              writer.writeLine(`const url = joinUrl(this.baseUrl${operation.path ? `, ${operation.parameters.length ? "`" + operation.path.replace(/\{(.+?)\}/g, "${params.$1}") + "`" : `'${operation.path}'`}` : ""});`);
+              const contentTypes = new Set(operation.body.map((body) => body.contentType));
+              if (operation.body.length) {
+                writer.writeLine(`const { body, headers } = accept(data, [${[...contentTypes].map((type) => JSON.stringify(type)).join(", ")}]);`);
+              } else {
+                writer.writeLine(`const headers = new Headers();`);
+              }
               if (operation.queryParameters?.length) {
                 writer.writeLine("url.search = new URLSearchParams(query).toString();");
                 writer.break();
               }
+              writer.break();
               writer.writeLine(`return this.request({`);
               writer.indent(() => {
                 writer.writeLine(`method: '${operation.method}',`);
@@ -374,6 +434,7 @@ class JsRenderer {
                 if (operation.body.length) {
                   writer.writeLine(`body,`);
                 }
+                writer.writeLine(`headers,`);
               });
               writer.writeLine(`});`);
             });

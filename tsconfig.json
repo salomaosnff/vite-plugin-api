@@ -3,10 +3,14 @@
         "target": "ES6",
         "lib": ["es2022"],
         "downlevelIteration": true,
+        "skipLibCheck": true,
         "moduleResolution": "Node",
         "types": [
             "openapi-types"
-        ]
+        ],
+        "outDir": "dist",
+        "declaration": true,
+        "declarationDir": "dist",
     },
     "include": ["src"],
     "exclude": ["example", "dist", "node_modules/**/*"]
