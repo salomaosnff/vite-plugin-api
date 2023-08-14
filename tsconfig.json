@@ -5,6 +5,7 @@
         "downlevelIteration": true,
         "skipLibCheck": true,
         "moduleResolution": "Node",
+        "module": "ES6",
         "types": [
             "openapi-types"
         ],
