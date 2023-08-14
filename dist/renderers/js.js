@@ -19,7 +19,7 @@ export class JsRenderer {
             const writer = createWritter();
             writer.writeLine(`function joinUrl(base, path = '') {`);
             writer.indent(() => {
-                writer.writeLine(`return new URL(path.replace(/^\\/\\/+/, ''), base)`);
+                writer.writeLine(`return new URL(path.replace(/^\\/+/, ''), base)`);
             });
             writer.writeLine(`}`);
             writer.break();
