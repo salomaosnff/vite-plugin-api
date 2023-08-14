@@ -13,7 +13,7 @@ export class JsRenderer implements ApiDocsRenderer {
 
     writer.writeLine(`function joinUrl(base, path = '') {`);
     writer.indent(() => {
-      writer.writeLine(`return new URL(path.replace(/^\\/\\/+/, ''), base)`);
+      writer.writeLine(`return new URL(path.replace(/^\\/+/, ''), base)`);
     })
     writer.writeLine(`}`);
 
