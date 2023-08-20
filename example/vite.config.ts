@@ -10,12 +10,6 @@ export default defineConfig({
                 parser: new OpenAPIV3Parser({
                     swaggerBaseUrl: 'https://petstore3.swagger.io/',
                 })
-            },
-            'erp': {
-                source: 'https://api-erp-dev.lux-one.com/productionsettings/swagger/v1/swagger.json',
-                parser: new OpenAPIV3Parser({
-                    swaggerBaseUrl: 'https://api-erp-dev.lux-one.com/',
-                })
             }
         })
     ]
