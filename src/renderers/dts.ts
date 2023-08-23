@@ -81,6 +81,7 @@ export class DtsRenderer implements ApiDocsRenderer {
                                         writer.write(', ');
                                     }
                                     writer.write(`query: ${query}`);
+                                    hasPrevParam = true;
                                 }
 
                                 if (body) {
