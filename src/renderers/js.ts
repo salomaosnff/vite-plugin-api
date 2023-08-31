@@ -122,7 +122,7 @@ export class JsRenderer implements ApiDocsRenderer {
 
               if (operation.queryParameters?.length) {
                 writer.break()
-                writer.writeLine('url.searchParams = parseQuery(query);');
+                writer.writeLine('url.search = parseQuery(query).toString();');
               }
 
               writer.break();
