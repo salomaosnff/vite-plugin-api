@@ -51,7 +51,7 @@ export function SwaggerApi(apis: SwaggerApiDict): Plugin {
             types += `    headers: Headers;\n`
             types += `  }\n`
             types += `}\n`
-            
+
             for (const apiName in apis) {
                 console.debug(`Loading Swagger API "${apiName}"...`)
                 const typesRenderer = apis[apiName].typesRenderer ?? new DtsRenderer()
@@ -73,7 +73,7 @@ export function SwaggerApi(apis: SwaggerApiDict): Plugin {
         },
         resolveId(source, importer, options) {
             if (source === 'virtual:swagger/core') {
-                return source+".ts"
+                return source + ".ts"
             }
 
             if (!source.startsWith(RESOLVE_ID)) {

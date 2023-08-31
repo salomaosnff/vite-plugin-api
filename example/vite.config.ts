@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
-import { SwaggerApi } from "../src/vite";
-import { OpenAPIV3Parser } from "../src/generators/openapi3";
+import { OpenAPIV3Parser, SwaggerApi } from "../src";
 
 export default defineConfig({
     plugins: [
