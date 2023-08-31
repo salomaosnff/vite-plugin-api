@@ -49,9 +49,13 @@ export class JsRenderer {
     writer.indent(() => {
       writer.writeLine("const params = new URLSearchParams();");
       writer.break();
-      writer.writeLine("for (const [key, value] of Object.entries(query)) {");
+      writer.writeLine("for (const [key, values] of Object.entries(query)) {");
       writer.indent(() => {
-        writer.writeLine("params.append(key, value);");
+        writer.writeLine("for (const value of [].concat(values)) {");
+        writer.indent(() => {
+          writer.writeLine("params.append(key, value);");
+        });
+        writer.writeLine("}");
       });
       writer.writeLine("}");
       writer.break();
