@@ -102,7 +102,7 @@ export class JsRenderer {
               }
               if (operation.queryParameters?.length) {
                 writer.break();
-                writer.writeLine("url.searchParams = parseQuery(query);");
+                writer.writeLine("url.search = parseQuery(query).toString();");
               }
               writer.break();
               writer.writeLine(`return this.request({`);
