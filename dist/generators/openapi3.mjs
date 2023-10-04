@@ -9,6 +9,9 @@ function parseSchema(schema) {
   if (schema.type === "string") {
     return "string";
   }
+  if (schema.type === "boolean") {
+    return "boolean";
+  }
   if (schema.type === "array") {
     return `${parseSchema(schema.items)}[]`;
   }

@@ -35,7 +35,6 @@ export class JsRenderer implements ApiDocsRenderer {
         writer.break();
         writer.writeLine(`if (contentType === 'multipart/form-data' && body instanceof FormData) {`);
         writer.indent(() => {
-          writer.writeLine(`headers.set('Content-Type', contentType);`);
           writer.writeLine(`return { body, headers };`);
         })
         writer.writeLine(`}`);
@@ -43,7 +42,6 @@ export class JsRenderer implements ApiDocsRenderer {
         writer.writeLine(`if (contentType === 'application/x-www-form-urlencoded' && body instanceof URLSearchParams) {`);
         writer.indent(() => {
           writer.writeLine(`body = body.toString();`);
-          writer.writeLine(`headers.set('Content-Type', contentType);`);
           writer.writeLine(`return { body, headers };`);
         })
         writer.writeLine(`}`);

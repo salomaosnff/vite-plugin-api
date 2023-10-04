@@ -51,7 +51,7 @@ export class DtsRenderer implements ApiDocsRenderer {
                                     writer.writeLine(` *`);
                                 }
                                 writer.writeLine(` * @endpoint ${operation.method} ${service.baseUrl}${operation.path}`);
-                                
+
                                 if (body?.contentType) {
                                     writer.writeLine(` * @contentType ${body.contentType}`)
                                 }

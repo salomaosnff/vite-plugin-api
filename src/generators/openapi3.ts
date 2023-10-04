@@ -15,6 +15,10 @@ function parseSchema(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)
         return 'string'
     }
 
+    if (schema.type === 'boolean') {
+        return 'boolean'
+    }
+
     if (schema.type === 'array') {
         return `${parseSchema(schema.items!)}[]`
     }
@@ -140,7 +144,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
         const responsed = new Set<string>()
 
         for (const [code, response] of Object.entries(responses) as [string, OpenAPIV3.ResponseObject][]) {
-            if(!response.content) {
+            if (!response.content) {
                 const id = genResponseId(parseInt(code), 'void')
                 if (responsed.has(id)) continue
                 bodies.push({
@@ -164,7 +168,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
                     type,
                     description: response.description,
                 })
-                
+
                 responsed.add(id)
             }
         }
