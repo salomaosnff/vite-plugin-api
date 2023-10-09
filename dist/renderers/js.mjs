@@ -85,13 +85,20 @@ export class JsRenderer {
                 writer.write(", ");
               }
               writer.write(`query`);
+              hasPrevParam = true;
             }
             if (operation.body.length) {
               if (hasPrevParam) {
                 writer.write(", ");
               }
               writer.write(`data`);
+              hasPrevParam = true;
             }
+            if (hasPrevParam) {
+              writer.write(", ");
+            }
+            writer.write(`req = {}`);
+            hasPrevParam = true;
             writer.write(`) {`);
             writer.break();
             writer.indent(() => {
@@ -116,6 +123,7 @@ export class JsRenderer {
                 }
                 writer.writeLine(`headers,`);
               });
+              writer.writeLine(`...req,`);
               writer.writeLine(`});`);
             });
             writer.writeLine("}");

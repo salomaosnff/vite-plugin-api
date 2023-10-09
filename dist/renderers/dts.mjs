@@ -73,7 +73,12 @@ export class DtsRenderer {
                     writer.write(", ");
                   }
                   writer.write(`body: ${body.type ?? body.schema ?? "any"}`);
+                  hasPrevParam = true;
                 }
+                if (hasPrevParam) {
+                  writer.write(", ");
+                }
+                writer.write(`req?: any`);
                 writer.write(`): Promise<ApiResponse<${operation.responses.map((r) => r.type).join(" | ") || "void"}>>;`);
                 writer.break();
               };
