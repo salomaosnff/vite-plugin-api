@@ -100,6 +100,7 @@ export class JsRenderer implements ApiDocsRenderer {
                 writer.write(', ');
               }
               writer.write(`query`);
+              hasPrevParam = true;
             }
 
             if (operation.body.length) {
@@ -107,7 +108,14 @@ export class JsRenderer implements ApiDocsRenderer {
                 writer.write(', ');
               }
               writer.write(`data`);
+              hasPrevParam = true;
             }
+
+            if (hasPrevParam) {
+              writer.write(', ');
+            }
+            writer.write(`req = {}`);
+            hasPrevParam = true;
 
             writer.write(`) {`);
             writer.break();
@@ -138,6 +146,7 @@ export class JsRenderer implements ApiDocsRenderer {
                 }
                 writer.writeLine(`headers,`);
               })
+              writer.writeLine(`...req,`)
               writer.writeLine(`});`);
             })
             writer.writeLine('}')
