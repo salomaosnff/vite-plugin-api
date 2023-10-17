@@ -1,13 +1,17 @@
 import { Services } from 'swagger:petshop'
 
-const service = new Services.Pet(async () => ({
-    data: null as any,
-    headers: new Headers(),
-    status: 200,
-}))
+const service = new Services.Comments(async () => {
+    debugger;
 
-service.findPetsByStatus({
-    status: 'available'
+    return ({
+        data: null as any,
+        headers: new Headers(),
+        status: 200,
+    })
+})
+
+service.createComment({
+    slug: 'test',
 })
 
 console.log(Services)

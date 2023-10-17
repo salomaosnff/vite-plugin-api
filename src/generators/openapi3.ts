@@ -45,8 +45,15 @@ export interface OpenAPIV3GeneratorOptions {
 
 function getBasePath(paths: string[]) {
     const pathArr = paths.map((path) => path.split('/'));
-    const base = pathArr[0].filter((dir, i) => pathArr.every((p) => p[i] === dir));
-    return base.join('/');
+    const base = pathArr[0].filter((dir, i) => pathArr.every((p) => p[i] === dir)).join('/');
+
+    const firstParamIndex = base.indexOf('{');
+
+    if (firstParamIndex === -1) {
+        return base;
+    }
+
+    return base.slice(0, firstParamIndex);
 }
 
 export function getServiceBaseUrl(service: Service) {
@@ -176,7 +183,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
         return bodies
     }
 
-    parseOperation(operation: OpenAPIV3.OperationObject) {
+    parseOperation(operation: OpenAPIV3.OperationObject) {        
         const parameters: OperationParameter[] = []
         const queryParameters: OperationParameter[] = []
 
@@ -206,6 +213,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
         }
 
         const serviceMap = new Map<string, Service>()
+        
 
         for (const [name, schema] of Object.entries(input.components?.schemas || {})) {
             docs.models[name] = parseSchema(schema)

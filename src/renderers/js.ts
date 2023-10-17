@@ -120,11 +120,15 @@ export class JsRenderer implements ApiDocsRenderer {
             writer.write(`) {`);
             writer.break();
             writer.indent(() => {
-              writer.writeLine(`const url = joinUrl(this.baseUrl${operation.path ? `, ${(operation.parameters.length ? '`' + operation.path.replace(/\{(.+?)\}/g, '${params.$1}') + '`' : `'${operation.path}'`)}` : ''});`);
+              if (operation.path && operation.parameters.length) {
+                writer.writeLine(`const url = joinUrl(this.baseUrl${operation.path ? `, ${(operation.parameters.length ? '`' + operation.path.replace(/\{(.+?)\}/g, '${params.$1}') + '`' : `'${operation.path}'`)}` : ''});`);
+              } else {
+                writer.writeLine(`const url = this.baseUrl;`)
+              }
 
-              const contentTypes = new Set(operation.body.map(body => body.contentType));
+              const contentTypes = new Set(operation.body.map(body => body.contentType));              
 
-              if (operation.body.length) {
+              if (operation.body.length > 0) {
                 writer.writeLine(`const { body, headers } = accept(data, [${[...contentTypes].map(type => JSON.stringify(type)).join(', ')}]);`);
               } else {
                 writer.writeLine(`const headers = new Headers();`);
