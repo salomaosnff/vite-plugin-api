@@ -24,8 +24,12 @@ function parseSchema(schema) {
 }
 function getBasePath(paths) {
   const pathArr = paths.map((path) => path.split("/"));
-  const base = pathArr[0].filter((dir, i) => pathArr.every((p) => p[i] === dir));
-  return base.join("/");
+  const base = pathArr[0].filter((dir, i) => pathArr.every((p) => p[i] === dir)).join("/");
+  const firstParamIndex = base.indexOf("{");
+  if (firstParamIndex === -1) {
+    return base;
+  }
+  return base.slice(0, firstParamIndex);
 }
 export function getServiceBaseUrl(service) {
   return getBasePath(Object.values(service.operations).map((operation) => operation.path)).replace(/\/+$/, "");

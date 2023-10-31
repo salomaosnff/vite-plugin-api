@@ -31,7 +31,7 @@ export class DtsRenderer {
         for (const service of api.services) {
           writer.writeLine(`export class ${service.name} {`);
           writer.indent(() => {
-            writer.writeLine(`constructor(handler: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);`);
+            writer.writeLine(`constructor(handler?: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);`);
             for (const operation of service.operations) {
               const params = this.renderOperationParams(operation.parameters);
               const query = this.renderOperationParams(operation.queryParameters);

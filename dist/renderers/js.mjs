@@ -5,6 +5,23 @@ export class JsRenderer {
   }
   async render(api) {
     const writer = createWritter();
+    writer.writeLine(`async function fetchRequest(req) {`);
+    writer.indent(() => {
+      writer.writeLine(`const response = await fetch(req.url, req);`);
+      writer.break();
+      writer.writeLine(`if (!response.ok) {`);
+      writer.indent(() => {
+        writer.writeLine(`throw new Error(response.statusText);`);
+      });
+      writer.writeLine(`}`);
+      writer.break();
+      writer.writeLine(`return {`);
+      writer.writeLine(`status: response.status,`);
+      writer.writeLine(`body: await response.json(),`);
+      writer.writeLine(`headers: response.headers,`);
+      writer.writeLine(`}`);
+    });
+    writer.writeLine(`}`);
     writer.writeLine(`function joinUrl(base, path = '') {`);
     writer.indent(() => {
       writer.writeLine(`return new URL(path.replace(/^\\/+/, ''), base.replace(/\\/+$/, '')+'/')`);
@@ -66,7 +83,7 @@ export class JsRenderer {
       for (const service of api.services) {
         writer.writeLine(`${service.name}: class ${service.name} {`);
         writer.indent(() => {
-          writer.writeLine(`constructor(request) {`);
+          writer.writeLine(`constructor(request = fetchRequest) {`);
           writer.indent(() => {
             writer.writeLine(`this.request = request;`);
             writer.writeLine(`this.baseUrl = '${service.baseUrl}';`);
@@ -102,9 +119,13 @@ export class JsRenderer {
             writer.write(`) {`);
             writer.break();
             writer.indent(() => {
-              writer.writeLine(`const url = joinUrl(this.baseUrl${operation.path ? `, ${operation.parameters.length ? "`" + operation.path.replace(/\{(.+?)\}/g, "${params.$1}") + "`" : `'${operation.path}'`}` : ""});`);
+              if (operation.path && operation.parameters.length) {
+                writer.writeLine(`const url = joinUrl(this.baseUrl${operation.path ? `, ${operation.parameters.length ? "`" + operation.path.replace(/\{(.+?)\}/g, "${params.$1}") + "`" : `'${operation.path}'`}` : ""});`);
+              } else {
+                writer.writeLine(`const url = this.baseUrl;`);
+              }
               const contentTypes = new Set(operation.body.map((body) => body.contentType));
-              if (operation.body.length) {
+              if (operation.body.length > 0) {
                 writer.writeLine(`const { body, headers } = accept(data, [${[...contentTypes].map((type) => JSON.stringify(type)).join(", ")}]);`);
               } else {
                 writer.writeLine(`const headers = new Headers();`);
