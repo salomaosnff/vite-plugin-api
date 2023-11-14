@@ -122,7 +122,7 @@ export class JsRenderer {
               if (operation.path && operation.parameters.length) {
                 writer.writeLine(`const url = joinUrl(this.baseUrl${operation.path ? `, ${operation.parameters.length ? "`" + operation.path.replace(/\{(.+?)\}/g, "${params.$1}") + "`" : `'${operation.path}'`}` : ""});`);
               } else {
-                writer.writeLine(`const url = this.baseUrl;`);
+                writer.writeLine(`const url = this.baseUrl+'${operation.path}';`);
               }
               const contentTypes = new Set(operation.body.map((body) => body.contentType));
               if (operation.body.length > 0) {
