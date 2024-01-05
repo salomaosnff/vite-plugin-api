@@ -1,7 +1,6 @@
 import type { Plugin } from "vite";
 import axios from 'axios'
-import { readFile, writeFile } from 'fs/promises'
-import * as prettier from 'prettier'
+import { readFile, writeFile, appendFile } from 'fs/promises'
 import { ApiDocs, ApiDocsParser, ApiDocsRenderer } from "./types";
 import { DtsRenderer } from "./renderers/dts";
 import { OpenAPIV3Parser } from "./generators/openapi3";
@@ -51,27 +50,11 @@ export function SwaggerApi(apis: SwaggerApiDict): Plugin {
             types += `    headers: Headers;\n`
             types += `  }\n`
             types += `}\n`
+            
 
-            for (const apiName in apis) {
-                console.debug(`Loading Swagger API "${apiName}"...`)
-                const typesRenderer = apis[apiName].typesRenderer ?? new DtsRenderer()
-                apisMap[apiName] = await loadApi(apis[apiName])
-                apisMap[apiName].name = apiName
-                types += await typesRenderer.render(apisMap[apiName])
-            }
-
-            types = await prettier.format(types, {
-                parser: 'typescript',
-                semi: true,
-                singleQuote: true,
-                trailingComma: 'all',
-                arrowParens: 'always',
-                printWidth: 120,
-            })
-
-            writeFile('src/swagger.d.ts', types)
+            await writeFile('src/swagger.d.ts', types)
         },
-        resolveId(source, importer, options) {
+        async resolveId(source, importer, options) {
             if (source === 'virtual:swagger/core') {
                 return source + ".ts"
             }
@@ -85,6 +68,18 @@ export function SwaggerApi(apis: SwaggerApiDict): Plugin {
             if (!apis[apiName]) {
                 return;
             }
+
+            if (apisMap[apiName]) {
+                return source
+            }
+            
+            console.debug(`Resolving Swagger API "${apiName}"...`)
+            const typesRenderer = apis[apiName].typesRenderer ?? new DtsRenderer()
+            apisMap[apiName] = await loadApi(apis[apiName])
+            apisMap[apiName].name = apiName
+            const types = await typesRenderer.render(apisMap[apiName])
+
+            await appendFile('src/swagger.d.ts', types)
 
             return source
         },
