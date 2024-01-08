@@ -144,8 +144,10 @@ export class JsRenderer implements ApiDocsRenderer {
             writer.indent(() => {
               if (operation.path && operation.parameters.length) {
                 writer.writeLine(`const url = joinUrl(this.baseUrl${operation.path ? `, ${(operation.parameters.length ? '`' + operation.path.replace(/\{(.+?)\}/g, '${params.$1}') + '`' : `'${operation.path}'`)}` : ''});`);
+              } else if (operation.path) {
+                writer.writeLine(`const url = new URL(this.baseUrl+'${operation.path}');`)
               } else {
-                writer.writeLine(`const url = this.baseUrl+'${operation.path}';`)
+                writer.writeLine(`const url = new URL(this.baseUrl);`)
               }
 
               const contentTypes = new Set(operation.body.map(body => body.contentType));

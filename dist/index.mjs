@@ -16,6 +16,15 @@ async function loadApi(api) {
 }
 export function SwaggerApi(apis) {
   let apisMap = {};
+  async function resolveApi(apiName) {
+    console.debug(`Resolving Swagger API "${apiName}"...`);
+    const typesRenderer = apis[apiName].typesRenderer ?? new DtsRenderer();
+    const result = await loadApi(apis[apiName]);
+    result.name = apiName;
+    const types = await typesRenderer.render(result);
+    await appendFile("src/swagger.d.ts", types);
+    return result;
+  }
   return {
     name: "swagger-api-ts",
     async buildStart() {
@@ -57,15 +66,9 @@ export function SwaggerApi(apis) {
       if (!apis[apiName]) {
         return;
       }
-      if (apisMap[apiName]) {
-        return source;
+      if (!apisMap[apiName]) {
+        apisMap[apiName] = resolveApi(apiName);
       }
-      console.debug(`Resolving Swagger API "${apiName}"...`);
-      const typesRenderer = apis[apiName].typesRenderer ?? new DtsRenderer();
-      apisMap[apiName] = await loadApi(apis[apiName]);
-      apisMap[apiName].name = apiName;
-      const types = await typesRenderer.render(apisMap[apiName]);
-      await appendFile("src/swagger.d.ts", types);
       return source;
     },
     async load(id) {
@@ -76,8 +79,12 @@ export function SwaggerApi(apis) {
         return;
       }
       const apiName = id.substring(RESOLVE_ID.length);
+      const apiDocs = await apisMap[apiName];
+      if (!apiDocs) {
+        return;
+      }
       const moduleRenderer = apis[apiName].moduleRenderer ?? new JsRenderer();
-      return moduleRenderer.render(apisMap[apiName]);
+      return moduleRenderer.render(apiDocs);
     }
   };
 }
