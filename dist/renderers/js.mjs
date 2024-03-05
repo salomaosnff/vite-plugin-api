@@ -68,7 +68,11 @@ export class JsRenderer {
       writer.indent(() => {
         writer.writeLine("for (const value of [].concat(values)) {");
         writer.indent(() => {
-          writer.writeLine("params.append(key, value);");
+          writer.writeLine("if (value !== undefined) {");
+          writer.indent(() => {
+            writer.writeLine("params.append(key, value);");
+          });
+          writer.writeLine("}");
         });
         writer.writeLine("}");
       });
