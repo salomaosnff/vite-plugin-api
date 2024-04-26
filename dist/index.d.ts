@@ -7,7 +7,7 @@ export interface SwaggerApiOptions {
     moduleRenderer?: ApiDocsRenderer;
 }
 export type SwaggerApiDict = Record<string, SwaggerApiOptions>;
-export declare function SwaggerApi(apis: SwaggerApiDict): Plugin;
+export declare function SwaggerApi(apis: SwaggerApiDict, dts?: string): Plugin;
 export * from './types';
 export * from './generators/openapi3';
 export * from './renderers/dts';

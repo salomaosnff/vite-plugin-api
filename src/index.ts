@@ -30,7 +30,7 @@ async function loadApi(api: SwaggerApiOptions): Promise<ApiDocs> {
     return parser.parse(data)
 }
 
-export function SwaggerApi(apis: SwaggerApiDict): Plugin {
+export function SwaggerApi(apis: SwaggerApiDict, dts = 'src/swagger.d.ts'): Plugin {
     let apisMap: Record<string, Promise<ApiDocs>> = {}
 
     async function resolveApi(apiName:string) {
@@ -42,7 +42,7 @@ export function SwaggerApi(apis: SwaggerApiDict): Plugin {
         
         const types = await typesRenderer.render(result)
 
-        await appendFile('src/swagger.d.ts', types)
+        await appendFile(dts, types)
 
         return result
     }
@@ -66,7 +66,7 @@ export function SwaggerApi(apis: SwaggerApiDict): Plugin {
             types += `}\n`
             
 
-            await writeFile('src/swagger.d.ts', types)
+            await writeFile(dts, types)
         },
         async resolveId(source, importer, options) {
             if (source === 'virtual:swagger/core') {

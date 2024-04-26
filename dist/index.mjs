@@ -14,7 +14,7 @@ async function loadApi(api) {
   const parser = api.parser ?? new OpenAPIV3Parser();
   return parser.parse(data);
 }
-export function SwaggerApi(apis) {
+export function SwaggerApi(apis, dts = "src/swagger.d.ts") {
   let apisMap = {};
   async function resolveApi(apiName) {
     console.debug(`Resolving Swagger API "${apiName}"...`);
@@ -22,7 +22,7 @@ export function SwaggerApi(apis) {
     const result = await loadApi(apis[apiName]);
     result.name = apiName;
     const types = await typesRenderer.render(result);
-    await appendFile("src/swagger.d.ts", types);
+    await appendFile(dts, types);
     return result;
   }
   return {
@@ -53,7 +53,7 @@ export function SwaggerApi(apis) {
 `;
       types += `}
 `;
-      await writeFile("src/swagger.d.ts", types);
+      await writeFile(dts, types);
     },
     async resolveId(source, importer, options) {
       if (source === "virtual:swagger/core") {
