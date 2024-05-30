@@ -26,7 +26,7 @@ function parseSchema(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)
     if (schema.type === 'object') {
         return '{' +
             Object.entries(schema.properties || {})
-                .map(([name, schema]: [string, any]) => `${name}${schema.required ? '' : '?'}: ${parseSchema(schema)}`)
+                .map(([name, s]: [string, any]) => `${name}${s.required || schema.required?.includes(name) ? '' : '?'}: ${parseSchema(s)}`)
                 .join(',\n') +
             '}'
     }

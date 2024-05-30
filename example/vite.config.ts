@@ -5,9 +5,9 @@ export default defineConfig({
     plugins: [
         SwaggerApi({
             'petshop': {
-                source: 'http://localhost:3000/docs/json',
+                source: 'https://petstore3.swagger.io/api/v3/openapi.json',
                 parser: new OpenAPIV3Parser({
-                    swaggerBaseUrl: 'http://localhost:3000/docs',
+                    swaggerBaseUrl: 'https://petstore3.swagger.io/',
                 })
             }
         })
