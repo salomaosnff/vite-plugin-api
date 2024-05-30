@@ -16,7 +16,7 @@ function parseSchema(schema) {
     return `${parseSchema(schema.items)}[]`;
   }
   if (schema.type === "object") {
-    return "{" + Object.entries(schema.properties || {}).map(([name, schema2]) => `${name}${schema2.required ? "" : "?"}: ${parseSchema(schema2)}`).join(",\n") + "}";
+    return "{" + Object.entries(schema.properties || {}).map(([name, s]) => `${name}${s.required || schema.required?.includes(name) ? "" : "?"}: ${parseSchema(s)}`).join(",\n") + "}";
   }
   if (schema.type === "integer" || schema.type === "number") {
     return "number";
