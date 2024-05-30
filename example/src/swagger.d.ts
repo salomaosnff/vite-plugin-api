@@ -13,268 +13,340 @@ declare module 'virtual:swagger/core' {
 declare module 'swagger:petshop' {
   import { ApiRequest, ApiResponse } from 'virtual:swagger/core';
   export namespace Models {
-    export type ApplicationError = { error?: string; message?: string; status?: number; info?: {} };
-    export type User = { id?: string; name?: string; email?: string; role?: 0 | 1; createdAt?: string };
-    export type Topic = {
-      id?: string;
-      title?: string;
-      slug?: string;
-      rate?: number;
-      body?: string;
-      author?: Models.User;
-      createdAt?: string;
-    };
-    export type Comment = { id?: string; body?: string; rate?: number; replyTo?: string };
-    export type PagedTopics = { items?: Models.Topic[]; totalItems?: number; totalPages?: number };
-    export type PagedComments = { items?: Models.Comment[]; totalItems?: number; totalPages?: number };
-    export type PagedTags = { items?: string[]; totalItems?: number; totalPages?: number };
+    export type Order = {id?: number,
+petId?: number,
+quantity?: number,
+shipDate?: string,
+status?: "placed" | "approved" | "delivered",
+complete?: boolean};
+    export type Customer = {id?: number,
+username?: string,
+address?: Models.Address[]};
+    export type Address = {street?: string,
+city?: string,
+state?: string,
+zip?: string};
+    export type Category = {id?: number,
+name?: string};
+    export type User = {id?: number,
+username?: string,
+firstName?: string,
+lastName?: string,
+email?: string,
+password?: string,
+phone?: string,
+userStatus?: number};
+    export type Tag = {id?: number,
+name?: string};
+    export type Pet = {id?: number,
+name: string,
+category?: Models.Category,
+photoUrls: string[],
+tags?: Models.Tag[],
+status?: "available" | "pending" | "sold"};
+    export type ApiResponse = {code?: number,
+type?: string,
+message?: string};
   }
 
   export namespace Services {
-    export class Auth {
-      constructor(handler: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);
+    export class Pet {
+      constructor(handler?: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);
       /**
-       * @endpoint POST http://localhost:3000/docs/login
+       * Update an existing pet by Id
+       *
+       * @endpoint PUT https://petstore3.swagger.io/pet
        * @contentType application/json
        *
-       * @see http://localhost:3000/docs#/Auth/login
-       * @returns 200 Usuário autenticado com sucesso
-       * @returns 401 Falha na autenticação
-       * @returns 422 Falha na validação dos dados
+       * @see https://petstore3.swagger.io/#/pet/updatePet
+       * @returns 200 Successful operation
+       * @returns 400 Invalid ID supplied
+       * @returns 404 Pet not found
+       * @returns 405 Validation exception
        */
-      login(
-        body: { login?: string; password?: string },
-        req?: any,
-      ): Promise<ApiResponse<Models.User | Models.ApplicationError | Models.ApplicationError>>;
+      updatePet(body: Models.Pet, req?: any): Promise<ApiResponse<Models.Pet | void | void | void>>;
+      /**
+       * Update an existing pet by Id
+       *
+       * @endpoint PUT https://petstore3.swagger.io/pet
+       * @contentType application/x-www-form-urlencoded
+       *
+       * @see https://petstore3.swagger.io/#/pet/updatePet
+       * @returns 200 Successful operation
+       * @returns 400 Invalid ID supplied
+       * @returns 404 Pet not found
+       * @returns 405 Validation exception
+       */
+      updatePet(body: URLSearchParams, req?: any): Promise<ApiResponse<Models.Pet | void | void | void>>;
+
+      /**
+       * Add a new pet to the store
+       *
+       * @endpoint POST https://petstore3.swagger.io/pet
+       * @contentType application/json
+       *
+       * @see https://petstore3.swagger.io/#/pet/addPet
+       * @returns 200 Successful operation
+       * @returns 405 Invalid input
+       */
+      addPet(body: Models.Pet, req?: any): Promise<ApiResponse<Models.Pet | void>>;
+      /**
+       * Add a new pet to the store
+       *
+       * @endpoint POST https://petstore3.swagger.io/pet
+       * @contentType application/x-www-form-urlencoded
+       *
+       * @see https://petstore3.swagger.io/#/pet/addPet
+       * @returns 200 Successful operation
+       * @returns 405 Invalid input
+       */
+      addPet(body: URLSearchParams, req?: any): Promise<ApiResponse<Models.Pet | void>>;
+
+      /**
+       * Multiple status values can be provided with comma separated strings
+       *
+       * @endpoint GET https://petstore3.swagger.io/pet/findByStatus
+       *
+       * @see https://petstore3.swagger.io/#/pet/findPetsByStatus
+       * @returns 200 successful operation
+       * @returns 400 Invalid status value
+       */
+      findPetsByStatus(query: {
+  status?: "available" | "pending" | "sold";
+}, req?: any): Promise<ApiResponse<Models.Pet[] | void>>;
+
+      /**
+       * Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.
+       *
+       * @endpoint GET https://petstore3.swagger.io/pet/findByTags
+       *
+       * @see https://petstore3.swagger.io/#/pet/findPetsByTags
+       * @returns 200 successful operation
+       * @returns 400 Invalid tag value
+       */
+      findPetsByTags(query: {
+  tags?: string[];
+}, req?: any): Promise<ApiResponse<Models.Pet[] | void>>;
+
+      /**
+       * Returns a single pet
+       *
+       * @endpoint GET https://petstore3.swagger.io/pet/{petId}
+       *
+       * @see https://petstore3.swagger.io/#/pet/getPetById
+       * @returns 200 successful operation
+       * @returns 400 Invalid ID supplied
+       * @returns 404 Pet not found
+       */
+      getPetById(params: {
+  petId: number;
+}, req?: any): Promise<ApiResponse<Models.Pet | void | void>>;
+
+      /**
+       * @endpoint POST https://petstore3.swagger.io/pet/{petId}
+       *
+       * @see https://petstore3.swagger.io/#/pet/updatePetWithForm
+       * @returns 405 Invalid input
+       */
+      updatePetWithForm(params: {
+  petId: number;
+}, query: {
+  name?: string;
+  status?: string;
+}, req?: any): Promise<ApiResponse<void>>;
+
+      /**
+       * @endpoint DELETE https://petstore3.swagger.io/pet/{petId}
+       *
+       * @see https://petstore3.swagger.io/#/pet/deletePet
+       * @returns 400 Invalid pet value
+       */
+      deletePet(params: {
+  api_key?: string;
+  petId: number;
+}, req?: any): Promise<ApiResponse<void>>;
+
+      /**
+       * @endpoint POST https://petstore3.swagger.io/pet/{petId}/uploadImage
+       *
+       * @see https://petstore3.swagger.io/#/pet/uploadFile
+       * @returns 200 successful operation
+       */
+      uploadFile(params: {
+  petId: number;
+}, query: {
+  additionalMetadata?: string;
+}, req?: any): Promise<ApiResponse<Models.ApiResponse>>;
+
     }
-    export class Users {
-      constructor(handler: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);
+    export class Store {
+      constructor(handler?: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);
       /**
-       * @endpoint POST http://localhost:3000/docs/users
+       * Returns a map of status codes to quantities
+       *
+       * @endpoint GET https://petstore3.swagger.io/store/inventory
+       *
+       * @see https://petstore3.swagger.io/#/store/getInventory
+       * @returns 200 successful operation
+       */
+      getInventory(req?: any): Promise<ApiResponse<{}>>;
+
+      /**
+       * Place a new order in the store
+       *
+       * @endpoint POST https://petstore3.swagger.io/store/order
        * @contentType application/json
        *
-       * @see http://localhost:3000/docs#/Users/createUser
-       * @returns 201 Usuário criado com sucesso
-       * @returns 409 Não foi possível cadastrar o usuário pois houve conflito com outro usuário
-       * @returns 422 Falha na validação dos dados
+       * @see https://petstore3.swagger.io/#/store/placeOrder
+       * @returns 200 successful operation
+       * @returns 405 Invalid input
        */
-      createUser(
-        body: { name?: string; email?: string; password?: string },
-        req?: any,
-      ): Promise<ApiResponse<Models.User | Models.ApplicationError | Models.ApplicationError>>;
+      placeOrder(body: Models.Order, req?: any): Promise<ApiResponse<Models.Order | void>>;
+      /**
+       * Place a new order in the store
+       *
+       * @endpoint POST https://petstore3.swagger.io/store/order
+       * @contentType application/x-www-form-urlencoded
+       *
+       * @see https://petstore3.swagger.io/#/store/placeOrder
+       * @returns 200 successful operation
+       * @returns 405 Invalid input
+       */
+      placeOrder(body: URLSearchParams, req?: any): Promise<ApiResponse<Models.Order | void>>;
+
+      /**
+       * For valid response try integer IDs with value <= 5 or > 10. Other values will generate exceptions.
+       *
+       * @endpoint GET https://petstore3.swagger.io/store/order/{orderId}
+       *
+       * @see https://petstore3.swagger.io/#/store/getOrderById
+       * @returns 200 successful operation
+       * @returns 400 Invalid ID supplied
+       * @returns 404 Order not found
+       */
+      getOrderById(params: {
+  orderId: number;
+}, req?: any): Promise<ApiResponse<Models.Order | void | void>>;
+
+      /**
+       * For valid response try integer IDs with value < 1000. Anything above 1000 or nonintegers will generate API errors
+       *
+       * @endpoint DELETE https://petstore3.swagger.io/store/order/{orderId}
+       *
+       * @see https://petstore3.swagger.io/#/store/deleteOrder
+       * @returns 400 Invalid ID supplied
+       * @returns 404 Order not found
+       */
+      deleteOrder(params: {
+  orderId: number;
+}, req?: any): Promise<ApiResponse<void | void>>;
+
     }
-    export class Topics {
-      constructor(handler: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);
+    export class User {
+      constructor(handler?: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);
       /**
-       * @endpoint POST http://localhost:3000/docs/topics
+       * This can only be done by the logged in user.
+       *
+       * @endpoint POST https://petstore3.swagger.io/user
        * @contentType application/json
        *
-       * @see http://localhost:3000/docs#/Topics/createTopic
-       * @returns 201 Tópico criado com sucesso
-       * @returns 401 Usuário não autenticado
-       * @returns 409 Não foi possível cadastrar o tópico pois houve conflito com outro tópico
-       * @returns 422 Falha na validação dos dados
+       * @see https://petstore3.swagger.io/#/user/createUser
+       * @returns NaN successful operation
        */
-      createTopic(
-        body: { title?: string; body?: string; tags?: string[] },
-        req?: any,
-      ): Promise<
-        ApiResponse<Models.Topic | Models.ApplicationError | Models.ApplicationError | Models.ApplicationError>
-      >;
-
+      createUser(body: Models.User, req?: any): Promise<ApiResponse<Models.User>>;
       /**
-       * @endpoint GET http://localhost:3000/docs/topics/{slug}
+       * This can only be done by the logged in user.
        *
-       * @see http://localhost:3000/docs#/Topics/getTopicBySlug
-       * @returns 200 Tópico obtido com sucesso
-       * @returns 404 Tópico não encontrado
+       * @endpoint POST https://petstore3.swagger.io/user
+       * @contentType application/x-www-form-urlencoded
+       *
+       * @see https://petstore3.swagger.io/#/user/createUser
+       * @returns NaN successful operation
        */
-      getTopicBySlug(
-        params: {
-          slug: string;
-        },
-        req?: any,
-      ): Promise<ApiResponse<Models.Topic | Models.ApplicationError>>;
+      createUser(body: URLSearchParams, req?: any): Promise<ApiResponse<Models.User>>;
 
       /**
-       * @endpoint PATCH http://localhost:3000/docs/topics/{slug}
+       * Creates list of users with given input array
+       *
+       * @endpoint POST https://petstore3.swagger.io/user/createWithList
        * @contentType application/json
        *
-       * @see http://localhost:3000/docs#/Topics/updateTopicBySlug
-       * @returns 200 Tópico atualizado com sucesso
-       * @returns 401 Usuário não autenticado
-       * @returns 404 Tópico não encontrado
+       * @see https://petstore3.swagger.io/#/user/createUsersWithListInput
+       * @returns 200 Successful operation
+       * @returns NaN successful operation
        */
-      updateTopicBySlug(
-        params: {
-          slug: string;
-        },
-        body: { title?: string; body?: string; tags?: string[] },
-        req?: any,
-      ): Promise<ApiResponse<Models.Topic | Models.ApplicationError | Models.ApplicationError>>;
+      createUsersWithListInput(body: Models.User[], req?: any): Promise<ApiResponse<Models.User | void>>;
 
       /**
-       * @endpoint DELETE http://localhost:3000/docs/topics/{slug}
+       * @endpoint GET https://petstore3.swagger.io/user/login
        *
-       * @see http://localhost:3000/docs#/Topics/deleteTopicBySlug
-       * @returns 204 Tópico deletado com sucesso
-       * @returns 401 Usuário não autenticado
-       * @returns 404 Tópico não encontrado
+       * @see https://petstore3.swagger.io/#/user/loginUser
+       * @returns 200 successful operation
+       * @returns 400 Invalid username/password supplied
        */
-      deleteTopicBySlug(
-        params: {
-          slug: string;
-        },
-        req?: any,
-      ): Promise<ApiResponse<void | Models.ApplicationError | Models.ApplicationError>>;
+      loginUser(query: {
+  username?: string;
+  password?: string;
+}, req?: any): Promise<ApiResponse<string | void>>;
 
       /**
-       * @endpoint POST http://localhost:3000/docs/topics/{slug}/rate
+       * @endpoint GET https://petstore3.swagger.io/user/logout
+       *
+       * @see https://petstore3.swagger.io/#/user/logoutUser
+       * @returns NaN successful operation
+       */
+      logoutUser(req?: any): Promise<ApiResponse<void>>;
+
+      /**
+       * @endpoint GET https://petstore3.swagger.io/user/{username}
+       *
+       * @see https://petstore3.swagger.io/#/user/getUserByName
+       * @returns 200 successful operation
+       * @returns 400 Invalid username supplied
+       * @returns 404 User not found
+       */
+      getUserByName(params: {
+  username: string;
+}, req?: any): Promise<ApiResponse<Models.User | void | void>>;
+
+      /**
+       * This can only be done by the logged in user.
+       *
+       * @endpoint PUT https://petstore3.swagger.io/user/{username}
        * @contentType application/json
        *
-       * @see http://localhost:3000/docs#/Topics/rateTopic
-       * @returns 200 Tópico avaliado com sucesso
-       * @returns 401 Usuário não autenticado
-       * @returns 404 Tópico não encontrado
+       * @see https://petstore3.swagger.io/#/user/updateUser
+       * @returns NaN successful operation
        */
-      rateTopic(
-        params: {
-          slug: string;
-        },
-        body: { rate?: '1' | '-1' },
-        req?: any,
-      ): Promise<ApiResponse<Models.Topic | Models.ApplicationError | Models.ApplicationError>>;
-    }
-    export class Comments {
-      constructor(handler: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);
+      updateUser(params: {
+  username: string;
+}, body: Models.User, req?: any): Promise<ApiResponse<void>>;
       /**
-       * @endpoint GET http://localhost:3000/docs/topics/{slug}/comments
+       * This can only be done by the logged in user.
        *
-       * @see http://localhost:3000/docs#/Comments/getComments
-       * @returns 200 Comentários obtidos com sucesso
-       * @returns 404 Tópico não encontrado
+       * @endpoint PUT https://petstore3.swagger.io/user/{username}
+       * @contentType application/x-www-form-urlencoded
+       *
+       * @see https://petstore3.swagger.io/#/user/updateUser
+       * @returns NaN successful operation
        */
-      getComments(
-        params: {
-          slug: string;
-        },
-        query: {
-          page?: number;
-          size?: number;
-        },
-        req?: any,
-      ): Promise<ApiResponse<Models.PagedComments | Models.ApplicationError>>;
+      updateUser(params: {
+  username: string;
+}, body: URLSearchParams, req?: any): Promise<ApiResponse<void>>;
 
       /**
-       * @endpoint POST http://localhost:3000/docs/topics/{slug}/comments
-       * @contentType application/json
+       * This can only be done by the logged in user.
        *
-       * @see http://localhost:3000/docs#/Comments/createComment
-       * @returns 201 Comentário criado com sucesso
-       * @returns 401 Usuário não autenticado
-       * @returns 404 Tópico não encontrado
-       * @returns 422 Falha na validação dos dados
+       * @endpoint DELETE https://petstore3.swagger.io/user/{username}
+       *
+       * @see https://petstore3.swagger.io/#/user/deleteUser
+       * @returns 400 Invalid username supplied
+       * @returns 404 User not found
        */
-      createComment(
-        params: {
-          slug: string;
-        },
-        body: { body?: string; replyTo?: string },
-        req?: any,
-      ): Promise<
-        ApiResponse<Models.Comment | Models.ApplicationError | Models.ApplicationError | Models.ApplicationError>
-      >;
+      deleteUser(params: {
+  username: string;
+}, req?: any): Promise<ApiResponse<void | void>>;
 
-      /**
-       * @endpoint PATCH http://localhost:3000/docs/topics/{slug}/comments/{id}
-       * @contentType application/json
-       *
-       * @see http://localhost:3000/docs#/Comments/updateComment
-       * @returns 200 Comentário atualizado com sucesso
-       * @returns 401 Usuário não autenticado
-       * @returns 404 Comentário ou tópico não encontrado
-       */
-      updateComment(
-        params: {
-          slug: string;
-          id: string;
-        },
-        body: { body?: string },
-        req?: any,
-      ): Promise<ApiResponse<Models.Comment | Models.ApplicationError | Models.ApplicationError>>;
-
-      /**
-       * @endpoint DELETE http://localhost:3000/docs/topics/{slug}/comments/{id}
-       *
-       * @see http://localhost:3000/docs#/Comments/deleteComment
-       * @returns 204 Comentário deletado com sucesso
-       * @returns 401 Usuário não autenticado
-       * @returns 404 Comentário ou tópico não encontrado
-       */
-      deleteComment(
-        params: {
-          slug: string;
-          id: string;
-        },
-        req?: any,
-      ): Promise<ApiResponse<void | Models.ApplicationError | Models.ApplicationError>>;
-
-      /**
-       * @endpoint POST http://localhost:3000/docs/topics/{slug}/comments/{id}/rate
-       * @contentType application/json
-       *
-       * @see http://localhost:3000/docs#/Comments/rateComment
-       * @returns 200 Comentário avaliado com sucesso
-       * @returns 401 Usuário não autenticado
-       * @returns 404 Comentário ou tópico não encontrado
-       */
-      rateComment(
-        params: {
-          slug: string;
-          id: string;
-        },
-        body: { rate?: '1' | '-1' },
-        req?: any,
-      ): Promise<ApiResponse<Models.Comment | Models.ApplicationError | Models.ApplicationError>>;
-    }
-    export class Tags {
-      constructor(handler: <T>(request: ApiRequest) => Promise<ApiResponse<T>>);
-      /**
-       * @endpoint GET http://localhost:3000/docs/tags/following
-       *
-       * @see http://localhost:3000/docs#/Tags/getFollowingTags
-       * @returns 200 Tags obtidas com sucesso
-       * @returns 401 Usuário não autenticado
-       */
-      getFollowingTags(req?: any): Promise<ApiResponse<Models.PagedTags | Models.ApplicationError>>;
-
-      /**
-       * @endpoint POST http://localhost:3000/docs/tags/following
-       * @contentType application/json
-       *
-       * @see http://localhost:3000/docs#/Tags/followTag
-       * @returns 200 Tag seguida com sucesso
-       * @returns 401 Usuário não autenticado
-       * @returns 422 Falha na validação dos dados
-       */
-      followTag(
-        body: { tag?: string },
-        req?: any,
-      ): Promise<ApiResponse<{ tag?: string } | Models.ApplicationError | Models.ApplicationError>>;
-
-      /**
-       * @endpoint DELETE http://localhost:3000/docs/tags/following
-       *
-       * @see http://localhost:3000/docs#/Tags/unfollowTag
-       * @returns 204 Tag deixada de seguir com sucesso
-       * @returns 422 Falha na validação dos dados
-       */
-      unfollowTag(
-        query: {
-          tag: string;
-        },
-        req?: any,
-      ): Promise<ApiResponse<void | Models.ApplicationError>>;
     }
   }
 }
