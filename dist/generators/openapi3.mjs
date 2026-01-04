@@ -16,7 +16,11 @@ function parseSchema(schema) {
     return `${parseSchema(schema.items)}[]`;
   }
   if (schema.type === "object") {
-    return "{" + Object.entries(schema.properties || {}).map(([name, s]) => `${name}${s.required || schema.required?.includes(name) ? "" : "?"}: ${parseSchema(s)}`).join(",\n") + "}";
+    return "{" + Object.entries(schema.properties || {}).map(([name, s]) => {
+      const key = name.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) ? name : JSON.stringify(name);
+      const mandatory = s.required || schema.required?.includes(name) ? "" : "?";
+      return `${key}${mandatory}: ${parseSchema(s)}`;
+    }).join(",\n") + "}";
   }
   if (schema.type === "integer" || schema.type === "number") {
     return "number";
@@ -110,8 +114,7 @@ export class OpenAPIV3Parser {
     for (const [code, response] of Object.entries(responses)) {
       if (!response.content) {
         const id = genResponseId(parseInt(code), "void");
-        if (responsed.has(id))
-          continue;
+        if (responsed.has(id)) continue;
         bodies.push({
           status: parseInt(code),
           contentType: "",
@@ -124,8 +127,7 @@ export class OpenAPIV3Parser {
         const status = parseInt(code);
         const type = parseSchema(content.schema);
         const id = genResponseId(status, type);
-        if (responsed.has(id))
-          continue;
+        if (responsed.has(id)) continue;
         bodies.push({
           status,
           contentType,
