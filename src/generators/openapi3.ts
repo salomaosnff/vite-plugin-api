@@ -26,7 +26,11 @@ function parseSchema(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)
     if (schema.type === 'object') {
         return '{' +
             Object.entries(schema.properties || {})
-                .map(([name, s]: [string, any]) => `${name}${s.required || schema.required?.includes(name) ? '' : '?'}: ${parseSchema(s)}`)
+                .map(([name, s]: [string, any]) => {
+                    const key = name.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) ? name : JSON.stringify(name)
+                    const mandatory = s.required || schema.required?.includes(name) ? '' : '?'
+                    return `${key}${mandatory}: ${parseSchema(s)}`
+                })
                 .join(',\n') +
             '}'
     }
@@ -183,7 +187,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
         return bodies
     }
 
-    parseOperation(operation: OpenAPIV3.OperationObject) {        
+    parseOperation(operation: OpenAPIV3.OperationObject) {
         const parameters: OperationParameter[] = []
         const queryParameters: OperationParameter[] = []
 
@@ -213,7 +217,7 @@ export class OpenAPIV3Parser implements ApiDocsParser {
         }
 
         const serviceMap = new Map<string, Service>()
-        
+
 
         for (const [name, schema] of Object.entries(input.components?.schemas || {})) {
             docs.models[name] = parseSchema(schema)
